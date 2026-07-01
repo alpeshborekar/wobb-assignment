@@ -6,15 +6,11 @@ A polished influencer discovery dashboard built on top of the Wobb frontend assi
 
 ```bash
 npm install
-npm run dev
-```
-
-Visit `http://localhost:5173`.
-
-```bash
-npm run build    # production build
-npm run lint     # eslint
-npm run preview  # preview the production build
+npm run dev        # development server at http://localhost:5173
+npm run build      # production build
+npm run preview    # preview the production build
+npm run lint       # eslint
+npm test           # run tests
 ```
 
 ## Technologies
@@ -26,93 +22,102 @@ npm run preview  # preview the production build
 
 ## Libraries added
 
-- **zustand** — state management for the selected list, with the `persist` middleware backing it onto `localStorage`. Replaces the React Context originally planned for this feature.
-- **react-hot-toast** — lightweight confirmation toasts for add/remove actions.
-- **clsx** — conditional className composition.
+- **zustand** — selected list state with `persist` middleware for localStorage
+- **framer-motion** — animations and micro-interactions
+- **react-hot-toast** — toast notifications for add/remove actions
+- **clsx** — conditional className composition
+- **vitest** + **@testing-library/react** — unit and component tests
 
-`react-beautiful-dnd` was removed: it was an unused dependency and is no longer maintained for React 19 / concurrent rendering.
+`react-beautiful-dnd` was removed — unused, and unmaintained for React 19.
 
 ## Folder structure
 
 ```
 src/
   components/
-    ui/             reusable primitives (Skeleton, EmptyState)
-    Layout.tsx       app shell with nav + selected-list badge
-    ProfileCard.tsx  memoized search result card
-    ProfileList.tsx  responsive grid + empty state
-    AddToListButton.tsx
-    PlatformFilter.tsx
+    ui/                   Skeleton, EmptyState primitives
+    Layout.tsx            sticky nav with live selected-list badge
+    ProfileCard.tsx       memoized card with motion interactions
+    ProfileList.tsx       responsive grid with staggered entrance
+    ProfileCardSkeleton.tsx
+    AddToListButton.tsx   animated add/remove toggle
+    PlatformFilter.tsx    spring-animated platform tabs
     VerifiedBadge.tsx
   pages/
     SearchPage.tsx
     ProfileDetailPage.tsx
     SelectedListPage.tsx
   store/
-    selectedListStore.ts   zustand store, persisted to localStorage
+    selectedListStore.ts  zustand store persisted to localStorage
+  tests/
+    dataHelpers.test.ts
+    selectedListStore.test.ts
+    AddToListButton.test.tsx
+    setup.ts
   utils/
-    dataHelpers.ts   search/filter logic over bundled JSON
-    formatters.ts    shared number/percentage formatting
-    profileLoader.ts dynamic profile JSON loader
+    dataHelpers.ts
+    formatters.ts
+    profileLoader.ts
   types/index.ts
 ```
 
-## Features implemented
+## Features
 
-- Search and platform filtering (Instagram / YouTube / TikTok), case-insensitive on both username and full name.
-- Profile detail page with stats, verified badge, and outbound link.
-- **Add to List**: select profiles from the search grid or the detail page, prevent duplicates by `user_id`, remove items, persist across refresh via `localStorage`, dedicated `/list` page with an empty state and live count badge in the nav.
-- Redesigned UI: card-based layout, responsive grid (1/2/3 columns), consistent spacing and type scale, hover and focus states, loading skeletons, empty states.
-- Accessibility: semantic roles on the platform tabs, `aria-pressed`/`aria-label` on the Add to List toggle, keyboard-operable profile cards, visible focus rings, alt text on every image, `rel="noopener noreferrer"` on the external link.
+- Platform filtering (Instagram / YouTube / TikTok) with spring-animated active tab
+- Case-insensitive search by username and full name
+- Profile detail page with stat grid, verified badge, and platform link
+- **Add to List** — add, remove, dedupe by `user_id`, persist via localStorage, dedicated `/list` page, live count badge in nav
+- Loading skeletons and empty states throughout
+- Fully responsive (1 / 2 / 3 column grid)
+- Accessible — `aria-pressed`, `aria-label`, `role="tablist"`, keyboard navigation, focus rings, alt text on all images
 
-## Assignment checklist
+## Animations
 
-- [x] Bugs fixed (see below)
-- [x] UI redesign
-- [x] Zustand for the selected-list state
-- [x] Add to List (add, dedupe, remove, persist, empty state)
-- [x] Code quality refactor
-- [x] Performance optimizations
-- [x] README
+- Platform tab pill slides between buttons (shared `layoutId` spring)
+- Profile cards stagger in on load, lift on hover, scale on tap
+- Add to List button cross-fades label, draws checkmark SVG on add
+- Nav badge pops in/out with spring when first item is added or last is removed
+- Selected list rows slide in on add, slide out on remove with layout animation
 
 ## Bugs fixed
 
-- Search matched `fullname` case-insensitively but compared `username` with raw case, so capitalized queries silently returned nothing.
-- The engagement rate on the detail page was multiplied by `10000` instead of `100`, displaying numbers two orders of magnitude too large; it also reused `engagement_rate` for the separate "Engagements" stat instead of the actual `engagements` count.
-- `target="_blank"` link to the external profile had no `rel="noopener noreferrer"`, a tab-nabbing security issue.
-- Profile images had no `alt` text.
-- `ProfileCard` used a hardcoded `w-[700px]`, breaking on any viewport narrower than that.
-- An unused `SearchBar` component and a duplicated `formatFollowersLocal`/`formatFollowersDetail` (re-implementing `formatters.ts`) were dead code, removed in favor of the shared formatter.
-- `onProfileClick` in `SearchPage` incremented a click counter using a stale closure value in its `console.log` and served no real purpose; removed along with the unused `data-search` DOM attribute.
-- `react-beautiful-dnd` was installed but never used and doesn't support React 19's concurrent features; removed.
+- Search compared `username` with raw case while `fullname` was lowercased — capitalized queries returned nothing
+- Engagement rate displayed `×10000` instead of `×100`; "Engagements" stat reused the wrong field
+- `target="_blank"` link missing `rel="noopener noreferrer"`
+- Profile images had no `alt` text
+- `ProfileCard` had a hardcoded `w-[700px]` breaking on narrow viewports
+- Unused `SearchBar` component and duplicate follower formatter functions removed
+- Stale-closure click counter in `SearchPage` served no purpose, removed
+- `react-beautiful-dnd` installed but never used
 
-## Performance optimizations
+## Performance
 
-- `ProfileCard` wrapped in `React.memo`; list rendering only re-renders cards whose props changed.
-- `extractProfiles`/`filterProfiles` results memoized with `useMemo`, keyed on platform and query.
-- Platform switches wrapped in `useTransition` so the UI shows a skeleton grid instead of blocking on a large re-render.
-- Routes are code-split with `React.lazy` so the initial bundle only loads the search page.
+- `ProfileCard` wrapped in `React.memo`
+- Filter results memoized with `useMemo`
+- Platform switches use `useTransition` to show skeletons instead of blocking
+- Pages code-split with `React.lazy`
+
+## Tests
+
+31 tests across 3 files covering search/filter logic, the Zustand store (add, remove, dedupe, isSelected, clear), and the AddToListButton component.
 
 ## Assumptions
 
-- "Selected list" is scoped to the whole app (not per-platform), since a creator could be deduped across platforms by `user_id` without conflict.
-- No backend exists, so persistence is `localStorage` only, as specified in the requirements.
+- Selected list is app-wide rather than per-platform; `user_id` is unique across platforms
+- No backend — localStorage persistence only
 
 ## Trade-offs
 
-- Skipped a global Set/Map index for the selected list given the dataset is small (≤30 sample profiles); would revisit at larger scale.
-- Did not add automated tests due to time constraints; would prioritize unit tests for `dataHelpers` and the zustand store next.
+- No Set/Map index for the selected list; array scan is fast enough at this dataset size
+- No debounce on search — not needed with local JSON data
 
 ## Future improvements
 
-- Add unit/integration tests (Vitest + React Testing Library).
-- Debounce search input for larger datasets.
-- Sort/filter options on the selected-list page (by platform, follower count).
-- Dark mode toggle (CSS variables already support it).
+- Debounce search for larger remote datasets
+- Sort/filter options on the selected list page
+- Dark mode (CSS variables are already structured for it)
 
 ## Deployment
-
-The project is a static Vite build, deployable to Vercel, Netlify, or GitHub Pages.
 
 **Vercel:**
 
@@ -121,4 +126,4 @@ npm i -g vercel
 vercel
 ```
 
-A `vercel.json` is included with a catch-all rewrite to `index.html` so client-side routes (`/profile/:username`, `/list`) resolve correctly on refresh.
+`vercel.json` includes a catch-all rewrite to `index.html` so `/profile/:username` and `/list` resolve correctly on direct load or refresh.
