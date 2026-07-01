@@ -2,6 +2,10 @@
 
 A polished influencer discovery dashboard built on top of the Wobb frontend assignment starter. Browse creators across Instagram, YouTube, and TikTok, view detailed profiles, and build a persistent shortlist.
 
+### Live Demo
+
+**Live Application:** https://wobb-assignment-two.vercel.app/
+
 ## Setup
 
 ```bash
@@ -70,14 +74,6 @@ src/
 - Loading skeletons and empty states throughout
 - Fully responsive (1 / 2 / 3 column grid)
 - Accessible — `aria-pressed`, `aria-label`, `role="tablist"`, keyboard navigation, focus rings, alt text on all images
-
-## Animations
-
-- Platform tab pill slides between buttons (shared `layoutId` spring)
-- Profile cards stagger in on load, lift on hover, scale on tap
-- Add to List button cross-fades label, draws checkmark SVG on add
-- Nav badge pops in/out with spring when first item is added or last is removed
-- Selected list rows slide in on add, slide out on remove with layout animation
 
 ## Bugs fixed
 
