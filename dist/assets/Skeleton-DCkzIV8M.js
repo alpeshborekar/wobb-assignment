@@ -1,0 +1,1 @@
+import{t as e}from"./index-CnMsFqs3.js";import{c as t}from"./formatters-C0Ca7kqy.js";var n=e();function r({className:e}){return(0,n.jsx)(`div`,{className:t(`animate-skeleton rounded-md bg-gray-200`,e),"aria-hidden":`true`})}export{r as t};
